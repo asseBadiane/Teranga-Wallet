@@ -7,6 +7,7 @@ use bdk::bitcoin::Network;
 use bdk::wallet::AddressInfo; 
 use std::str::FromStr;
 use bdk::SignOptions;
+use bdk::blockchain::Blockchain;
 
 fn main() -> Result<(), Box<dyn std::error::Error>>  {
     // Create a new wallet
@@ -45,6 +46,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>>  {
     let finalized = wallet.sign(&mut psbt, SignOptions::default())?;
     assert!(finalized, "Tx has not been finalized");
     println!("Transaction Signed: {}", finalized);
+
+    // Broadcast the transaction 
+    let raw_transaction = psbt.extract_tx();
+    let txid = raw_transaction.txid();
+    blockchain.broadcast(&raw_transaction)?;
+    println!("Transaction sent! TXID: {txid}.\nExplorer URL: https://blockstream.info/testnet/tx/{txid}", txid = txid);
 
     Ok(())
 }
