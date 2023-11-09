@@ -6,8 +6,10 @@ use bdk::electrum_client::Client;
 use bdk::bitcoin::Network;
 use bdk::wallet::AddressInfo; 
 use std::str::FromStr;
+use bdk::SignOptions;
 
 fn main() -> Result<(), Box<dyn std::error::Error>>  {
+    // Create a new wallet
     // Connect to electrum server 
     let blockchain = ElectrumBlockchain::from(Client::new("ssl://electrum.blockstream.info:60002")?); 
     // Create a new wallet
@@ -21,15 +23,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>>  {
     let addr: AddressInfo = wallet.get_address(AddressIndex::New)?;
     println!("Address: {}", addr);
 
+    // Generate a new address for the wallet
     wallet.sync(&blockchain, SyncOptions::default())?; // Sync wallet
 
     let balance = wallet.get_balance()?;
     println!("Wallet balance in SAT: {}", balance);
 
     
-
+    // Create a transaction 
     let faucet_address = Address::from_str("tb1qw2c3lxufxqe2x9s4rdzh65tpf4d7fssjgh8nv6")?;
-
     let mut tx_builder = wallet.build_tx();
     tx_builder
     .add_recipient(faucet_address.script_pubkey(), balance.get_total() / 2)
@@ -38,6 +40,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>>  {
     let (mut psbt, tx_details) = tx_builder.finish()?;
 
     println!("Transaction details: {:#?}", tx_details);
+
+    // Sign the transaction
+    let finalized = wallet.sign(&mut psbt, SignOptions::default())?;
+    assert!(finalized, "Tx has not been finalized");
+    println!("Transaction Signed: {}", finalized);
 
     Ok(())
 }
