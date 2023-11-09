@@ -1,10 +1,11 @@
-use bdk:: {Wallet, wallet::AddressIndex};
+use bdk:: {Wallet, wallet::AddressIndex, bitcoin::Address};
 use bdk::database::MemoryDatabase;
 use bdk::blockchain::ElectrumBlockchain;
 use bdk::SyncOptions;
 use bdk::electrum_client::Client;
 use bdk::bitcoin::Network;
 use bdk::wallet::AddressInfo; 
+use std::str::FromStr;
 
 fn main() -> Result<(), Box<dyn std::error::Error>>  {
     // Connect to electrum server 
@@ -25,5 +26,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>>  {
     let balance = wallet.get_balance()?;
     println!("Wallet balance in SAT: {}", balance);
 
+    
+
+    let faucet_address = Address::from_str("tb1qw2c3lxufxqe2x9s4rdzh65tpf4d7fssjgh8nv6")?;
+
+    let mut tx_builder = wallet.build_tx();
+    tx_builder
+    .add_recipient(faucet_address.script_pubkey(), balance.get_total() / 2)
+    .enable_rbf();
+
+    let (mut psbt, tx_details) = tx_builder.finish()?;
+
+    println!("Transaction details: {:#?}", tx_details);
+
     Ok(())
 }
+
+
+// bitcoin:
