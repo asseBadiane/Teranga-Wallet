@@ -1,9 +1,10 @@
-use bdk::Wallet;
+use bdk:: {Wallet, wallet::AddressIndex};
 use bdk::database::MemoryDatabase;
 use bdk::blockchain::ElectrumBlockchain;
 use bdk::SyncOptions;
 use bdk::electrum_client::Client;
 use bdk::bitcoin::Network;
+use bdk::wallet::AddressInfo; 
 
 fn main() -> Result<(), Box<dyn std::error::Error>>  {
     // Connect to electrum server 
@@ -15,6 +16,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>>  {
         Network::Testnet, // Use testnet
         MemoryDatabase::default(), // Use memory database for now
     )?;
+
+    let addr: AddressInfo = wallet.get_address(AddressIndex::New)?;
+    println!("Address: {}", addr);
 
     wallet.sync(&blockchain, SyncOptions::default())?; // Sync wallet
 
